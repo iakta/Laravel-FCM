@@ -119,6 +119,8 @@ class DownstreamResponse extends BaseResponse implements DownstreamResponseContr
         }
 
         if ($this->logEnabled) {
+            $json_pretty = json_encode($responseInJson, JSON_PRETTY_PRINT);
+            $this->logger->info("FCM Response message: ". $json_pretty . PHP_EOL);
             $this->logResponse();
         }
     }

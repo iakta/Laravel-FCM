@@ -2,12 +2,12 @@
 
 namespace LaravelFCM;
 
+use Illuminate\Support\ServiceProvider;
 use LaravelFCM\Sender\FCMGroup;
 use LaravelFCM\Sender\FCMSender;
-use Illuminate\Support\ServiceProvider;
-use Monolog\Logger;
-use Monolog\Handler\StreamHandler;
 use Monolog\Handler\NullHandler;
+use Monolog\Handler\StreamHandler;
+use Monolog\Logger;
 
 class FCMServiceProvider extends ServiceProvider
 {
@@ -26,8 +26,8 @@ class FCMServiceProvider extends ServiceProvider
 
     public function register()
     {
-		if (!str_contains($this->app->version(), 'Lumen')) {
-            $this->mergeConfigFrom(__DIR__.'/../config/fcm.php', 'fcm');
+        if (!str_contains($this->app->version(), 'Lumen')) {
+            $this->mergeConfigFrom(__DIR__ . '/../config/fcm.php', 'fcm');
         }
 
         $this->app->singleton('fcm.client', function ($app) {

@@ -45,7 +45,11 @@ class TopicResponse extends BaseResponse implements TopicResponseContract
      * TopicResponse constructor.
      *
      * @param \Psr\Http\Message\ResponseInterface $response
-     * @param Topics         $topic
+     * @param Topics $topic
+     * @param Logger $logger
+     * @throws Exceptions\InvalidRequestException
+     * @throws Exceptions\ServerResponseException
+     * @throws Exceptions\UnauthorizedRequestException
      */
     public function __construct(ResponseInterface $response, Topics $topic, Logger $logger)
     {

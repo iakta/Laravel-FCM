@@ -2,10 +2,9 @@
 
 namespace LaravelFCM\Response;
 
-use Monolog\Logger;
 use LaravelFCM\Message\Topics;
-use Monolog\Handler\StreamHandler;
 use Psr\Http\Message\ResponseInterface;
+use Monolog\Logger;
 
 /**
  * Class TopicResponse.
@@ -46,12 +45,16 @@ class TopicResponse extends BaseResponse implements TopicResponseContract
      * TopicResponse constructor.
      *
      * @param \Psr\Http\Message\ResponseInterface $response
-     * @param Topics         $topic
+     * @param Topics $topic
+     * @param Logger $logger
+     * @throws Exceptions\InvalidRequestException
+     * @throws Exceptions\ServerResponseException
+     * @throws Exceptions\UnauthorizedRequestException
      */
-    public function __construct(ResponseInterface $response, Topics $topic)
+    public function __construct(ResponseInterface $response, Topics $topic, Logger $logger)
     {
         $this->topic = $topic;
-        parent::__construct($response);
+        parent::__construct($response, $logger);
     }
 
     /**
@@ -103,9 +106,6 @@ class TopicResponse extends BaseResponse implements TopicResponseContract
      */
     protected function logResponse()
     {
-        $logger = new Logger('Laravel-FCM');
-        $logger->pushHandler(new StreamHandler(storage_path('logs/laravel-fcm.log')));
-
         $topic = $this->topic->build();
 
         $logMessage = "notification send to topic: ".json_encode($topic);
@@ -115,7 +115,7 @@ class TopicResponse extends BaseResponse implements TopicResponseContract
             $logMessage .= "with error (error : $this->error)";
         }
 
-        $logger->info($logMessage);
+        $this->logger->info($logMessage);
     }
 
     /**

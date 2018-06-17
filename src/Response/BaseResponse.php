@@ -6,6 +6,7 @@ use Psr\Http\Message\ResponseInterface;
 use LaravelFCM\Response\Exceptions\ServerResponseException;
 use LaravelFCM\Response\Exceptions\InvalidRequestException;
 use LaravelFCM\Response\Exceptions\UnauthorizedRequestException;
+use Monolog\Logger;
 
 /**
  * Class BaseResponse.
@@ -23,12 +24,24 @@ abstract class BaseResponse
     protected $logEnabled = false;
 
     /**
+     * The logger.
+     *
+     * @var \Monolog\Logger
+     */
+    protected $logger;
+
+    /**
      * BaseResponse constructor.
      *
      * @param \Psr\Http\Message\ResponseInterface $response
+     * @param Logger $logger
+     * @throws InvalidRequestException
+     * @throws ServerResponseException
+     * @throws UnauthorizedRequestException
      */
-    public function __construct(ResponseInterface $response)
+    public function __construct(ResponseInterface $response, Logger $logger)
     {
+        $this->logger = $logger;
         $this->isJsonResponse($response);
         $this->logEnabled = app('config')->get('fcm.log_enabled', false);
         $responseInJson = json_decode($response->getBody(), true);

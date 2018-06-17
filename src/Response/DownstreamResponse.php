@@ -3,7 +3,6 @@
 namespace LaravelFCM\Response;
 
 use Monolog\Logger;
-use Monolog\Handler\StreamHandler;
 use Psr\Http\Message\ResponseInterface;
 
 /**
@@ -87,6 +86,13 @@ class DownstreamResponse extends BaseResponse implements DownstreamResponseContr
     protected $hasMissingToken = false;
 
     /**
+     * @internal store tokens sent with success
+     *
+     * @var array
+     */
+    protected $tokensSuccessfullySent = [];
+
+    /**
      * @internal
      *
      * @var array
@@ -98,12 +104,16 @@ class DownstreamResponse extends BaseResponse implements DownstreamResponseContr
      *
      * @param \Psr\Http\Message\ResponseInterface $response
      * @param                $tokens
+     * @param Logger $logger
+     * @throws Exceptions\InvalidRequestException
+     * @throws Exceptions\ServerResponseException
+     * @throws Exceptions\UnauthorizedRequestException
      */
-    public function __construct(ResponseInterface $response, $tokens)
+    public function __construct(ResponseInterface $response, $tokens, Logger $logger)
     {
         $this->tokens = is_string($tokens) ? [$tokens] : $tokens;
 
-        parent::__construct($response);
+        parent::__construct($response, $logger);
     }
 
     /**
@@ -119,7 +129,13 @@ class DownstreamResponse extends BaseResponse implements DownstreamResponseContr
             $this->parseResult($responseInJson);
         }
 
+        if ($this->numberTokensSuccess > 0) {
+            $this->parseSuccessResult($responseInJson);
+        }
+
         if ($this->logEnabled) {
+            $json_pretty = json_encode($responseInJson, JSON_PRETTY_PRINT);
+            $this->logger->info("FCM Response message: ". $json_pretty . PHP_EOL);
             $this->logResponse();
         }
     }
@@ -161,6 +177,22 @@ class DownstreamResponse extends BaseResponse implements DownstreamResponseContr
                     if (!$this->needToBeDeleted($index, $result) && !$this->needToResend($index, $result) && !$this->checkMissingToken($result)) {
                         $this->needToAddError($index, $result);
                     }
+                }
+            }
+        }
+    }
+
+    /**
+     * @internal
+     *
+     * @param $responseInJson
+     */
+    private function parseSuccessResult($responseInJson)
+    {
+        foreach ($responseInJson[self::RESULTS] as $index => $result) {
+            if (array_key_exists(self::MESSAGE_ID, $result)) {
+                if ($this->tokens[$index]) {
+                    $this->tokensSuccessfullySent[] = $this->tokens[$index];
                 }
             }
         }
@@ -290,15 +322,12 @@ class DownstreamResponse extends BaseResponse implements DownstreamResponseContr
      */
     protected function logResponse()
     {
-        $logger = new Logger('Laravel-FCM');
-        $logger->pushHandler(new StreamHandler(storage_path('logs/laravel-fcm.log')));
-
         $logMessage = 'notification send to '.count($this->tokens).' devices'.PHP_EOL;
         $logMessage .= 'success: '.$this->numberTokensSuccess.PHP_EOL;
         $logMessage .= 'failures: '.$this->numberTokensFailure.PHP_EOL;
         $logMessage .= 'number of modified token : '.$this->numberTokenModify.PHP_EOL;
 
-        $logger->info($logMessage);
+        $this->logger->info($logMessage);
     }
 
     /**
@@ -398,6 +427,16 @@ class DownstreamResponse extends BaseResponse implements DownstreamResponseContr
     public function tokensWithError()
     {
         return $this->tokensWithError;
+    }
+
+    /**
+     * Return tokens that were sent successfully
+     *
+     * @return array
+     */
+    public function tokensWithSuccess()
+    {
+        return $this->tokensSuccessfullySent;
     }
 
     /**

@@ -6,6 +6,7 @@ use Illuminate\Support\ServiceProvider;
 use LaravelFCM\Sender\FCMGroup;
 use LaravelFCM\Sender\FCMSender;
 use Monolog\Handler\NullHandler;
+use Monolog\Handler\RotatingFileHandler;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
 
@@ -19,7 +20,7 @@ class FCMServiceProvider extends ServiceProvider
             $this->app->configure('fcm');
         } else {
             $this->publishes([
-                __DIR__.'/../config/fcm.php' => config_path('fcm.php'),
+                __DIR__ . '/../config/fcm.php' => config_path('fcm.php'),
             ]);
         }
     }
@@ -36,26 +37,23 @@ class FCMServiceProvider extends ServiceProvider
 
         $this->app->singleton('fcm.logger', function ($app) {
             $logger = new Logger('Laravel-FCM');
-            if ($app[ 'config' ]->get('fcm.log_enabled', false)) {
-                $logger->pushHandler(new NullHandler());
-            } else {
-                $logger->pushHandler(new StreamHandler(storage_path('logs/laravel-fcm.log')));
-            }
+            $filename = storage_path('logs/iakta-fcm-' . php_sapi_name() . '.log');
+            $logger->pushHandler(new RotatingFileHandler($filename, 15));
             return $logger;
         });
 
         $this->app->bind('fcm.group', function ($app) {
-            $client = $app[ 'fcm.client' ];
-            $url = $app[ 'config' ]->get('fcm.http.server_group_url');
-            $logger = $app[ 'fcm.logger' ];
+            $client = $app['fcm.client'];
+            $url = $app['config']->get('fcm.http.server_group_url');
+            $logger = $app['fcm.logger'];
 
             return new FCMGroup($client, $url, $logger);
         });
 
         $this->app->bind('fcm.sender', function ($app) {
-            $client = $app[ 'fcm.client' ];
-            $url = $app[ 'config' ]->get('fcm.http.server_send_url');
-            $logger = $app[ 'fcm.logger' ];
+            $client = $app['fcm.client'];
+            $url = $app['config']->get('fcm.http.server_send_url');
+            $logger = $app['fcm.logger'];
 
             return new FCMSender($client, $url, $logger);
         });

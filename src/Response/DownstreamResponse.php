@@ -2,9 +2,8 @@
 
 namespace LaravelFCM\Response;
 
-use Monolog\Logger;
-use Monolog\Handler\StreamHandler;
 use Psr\Http\Message\ResponseInterface;
+use Monolog\Logger;
 
 /**
  * Class DownstreamResponse.
@@ -99,11 +98,11 @@ class DownstreamResponse extends BaseResponse implements DownstreamResponseContr
      * @param \Psr\Http\Message\ResponseInterface $response
      * @param                $tokens
      */
-    public function __construct(ResponseInterface $response, $tokens)
+    public function __construct(ResponseInterface $response, $tokens, Logger $logger)
     {
         $this->tokens = is_string($tokens) ? [$tokens] : $tokens;
 
-        parent::__construct($response);
+        parent::__construct($response, $logger);
     }
 
     /**
@@ -120,6 +119,8 @@ class DownstreamResponse extends BaseResponse implements DownstreamResponseContr
         }
 
         if ($this->logEnabled) {
+            $json_pretty = json_encode($responseInJson, JSON_PRETTY_PRINT);
+            $this->logger->info("FCM Response message: ". $json_pretty . PHP_EOL);
             $this->logResponse();
         }
     }
@@ -290,15 +291,12 @@ class DownstreamResponse extends BaseResponse implements DownstreamResponseContr
      */
     protected function logResponse()
     {
-        $logger = new Logger('Laravel-FCM');
-        $logger->pushHandler(new StreamHandler(storage_path('logs/laravel-fcm.log')));
-
         $logMessage = 'notification send to '.count($this->tokens).' devices'.PHP_EOL;
         $logMessage .= 'success: '.$this->numberTokensSuccess.PHP_EOL;
         $logMessage .= 'failures: '.$this->numberTokensFailure.PHP_EOL;
         $logMessage .= 'number of modified token : '.$this->numberTokenModify.PHP_EOL;
 
-        $logger->info($logMessage);
+        $this->logger->info($logMessage);
     }
 
     /**

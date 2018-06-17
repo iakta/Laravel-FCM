@@ -86,6 +86,13 @@ class DownstreamResponse extends BaseResponse implements DownstreamResponseContr
     protected $hasMissingToken = false;
 
     /**
+     * @internal store tokens sent with success
+     *
+     * @var array
+     */
+    protected $tokensSuccessfullySent = [];
+
+    /**
      * @internal
      *
      * @var array
@@ -120,6 +127,10 @@ class DownstreamResponse extends BaseResponse implements DownstreamResponseContr
 
         if ($this->needResultParsing($responseInJson)) {
             $this->parseResult($responseInJson);
+        }
+
+        if ($this->numberTokensSuccess > 0) {
+            $this->parseSuccessResult($responseInJson);
         }
 
         if ($this->logEnabled) {
@@ -166,6 +177,22 @@ class DownstreamResponse extends BaseResponse implements DownstreamResponseContr
                     if (!$this->needToBeDeleted($index, $result) && !$this->needToResend($index, $result) && !$this->checkMissingToken($result)) {
                         $this->needToAddError($index, $result);
                     }
+                }
+            }
+        }
+    }
+
+    /**
+     * @internal
+     *
+     * @param $responseInJson
+     */
+    private function parseSuccessResult($responseInJson)
+    {
+        foreach ($responseInJson[self::RESULTS] as $index => $result) {
+            if (array_key_exists(self::MESSAGE_ID, $result)) {
+                if ($this->tokens[$index]) {
+                    $this->tokensSuccessfullySent[] = $this->tokens[$index];
                 }
             }
         }
@@ -400,6 +427,16 @@ class DownstreamResponse extends BaseResponse implements DownstreamResponseContr
     public function tokensWithError()
     {
         return $this->tokensWithError;
+    }
+
+    /**
+     * Return tokens that were sent successfully
+     *
+     * @return array
+     */
+    public function tokensWithSuccess()
+    {
+        return $this->tokensSuccessfullySent;
     }
 
     /**

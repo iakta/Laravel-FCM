@@ -2,8 +2,8 @@
 
 namespace LaravelFCM\Response;
 
-use Psr\Http\Message\ResponseInterface;
 use Monolog\Logger;
+use Psr\Http\Message\ResponseInterface;
 
 /**
  * Class DownstreamResponse.
@@ -97,6 +97,10 @@ class DownstreamResponse extends BaseResponse implements DownstreamResponseContr
      *
      * @param \Psr\Http\Message\ResponseInterface $response
      * @param                $tokens
+     * @param Logger $logger
+     * @throws Exceptions\InvalidRequestException
+     * @throws Exceptions\ServerResponseException
+     * @throws Exceptions\UnauthorizedRequestException
      */
     public function __construct(ResponseInterface $response, $tokens, Logger $logger)
     {

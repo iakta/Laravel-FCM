@@ -2,8 +2,8 @@
 
 namespace LaravelFCM\Response;
 
-use Psr\Http\Message\ResponseInterface;
 use Monolog\Logger;
+use Psr\Http\Message\ResponseInterface;
 
 /**
  * Class GroupResponse.
@@ -44,7 +44,11 @@ class GroupResponse extends BaseResponse implements GroupResponseContract
      * GroupResponse constructor.
      *
      * @param \Psr\Http\Message\ResponseInterface $response
-     * @param                $to
+     * @param $to
+     * @param Logger $logger
+     * @throws Exceptions\InvalidRequestException
+     * @throws Exceptions\ServerResponseException
+     * @throws Exceptions\UnauthorizedRequestException
      */
     public function __construct(ResponseInterface $response, $to, Logger $logger)
     {

@@ -405,7 +405,7 @@ class DownstreamResponse extends BaseResponse implements DownstreamResponseContr
     }
 
     /**
-     * Get tokens that you should resend using exponential backoof.
+     * Get tokens that you should resend using exponential backoff.
      *
      * @return array
      */
